@@ -137,12 +137,6 @@ Luna OSINT is designed for legitimate security research, penetration testing wit
 
 - Telegram : [Luna Intelligence](https://t.me/luna_intelligence)
 
-## 🙏 Acknowledgements
-
-- Thanks to all contributors and the open-source community
-- Special thanks to the developers of the libraries used in this project
-- Inspired by various OSINT frameworks and security tools
-
 ## 📄 License
 
 Luna OSINT is released under the MIT License. See the LICENSE file for details.
