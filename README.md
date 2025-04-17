@@ -66,7 +66,7 @@ Luna OSINT provides a wide array of capabilities divided into several modules:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/luna-osint-tool.git
+git clone https://github.com/luna-intelligence/Luna_Tool
 
 # Navigate to the project directory
 cd luna-osint-tool
@@ -86,7 +86,7 @@ sudo apt-get update
 sudo apt-get install python3 python3-pip git -y
 
 # Clone the repository
-git clone https://github.com/yourusername/luna-osint-tool.git
+git clone https://github.com/luna-intelligence/Luna_Tool.git
 
 # Navigate to the project directory
 cd luna-osint-tool
@@ -110,7 +110,7 @@ sudo dnf install python3 python3-pip git nmap libpcap-devel -y
 sudo pacman -S python python-pip git nmap libpcap
 
 # Clone the repository
-git clone https://github.com/yourusername/luna-osint-tool.git
+git clone https://github.com/luna-intelligence/Luna_Tool
 
 # Navigate to the project directory
 cd luna-osint-tool
