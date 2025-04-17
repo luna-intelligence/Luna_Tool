@@ -57,69 +57,17 @@ Luna OSINT provides a wide array of capabilities divided into several modules:
 - Administrative privileges for some network operations
 - Supported Operating Systems:
   - Windows 10/11
-  - Linux (Debian, Kali, Fedora, CentOS)
-  - Ubuntu (18.04+)
 
 ## 💻 Installation
 
 ### Windows
 
 ```bash
-# Clone the repository
+
 git clone https://github.com/luna-intelligence/Luna_Tool
-
-# Navigate to the project directory
 cd Luna_Tool
-
-# Install required dependencies
 pip install -r requirements.txt
-
-# Run the tool
 python main.py
-```
-
-### Ubuntu/Debian
-
-```bash
-# Install Python if not already installed
-sudo apt-get update
-sudo apt-get install python3 python3-pip git -y
-
-# Clone the repository
-git clone https://github.com/luna-intelligence/Luna_Tool.git
-
-# Navigate to the project directory
-cd Luna_Tool
-
-# Install required dependencies
-pip3 install -r requirements.txt
-
-# Install additional system dependencies
-sudo apt-get install nmap libpcap-dev -y
-
-# Run the tool
-python3 main.py
-```
-
-### Other Linux Distributions
-
-```bash
-# For Fedora/RHEL/CentOS
-sudo dnf install python3 python3-pip git nmap libpcap-devel -y
-# OR for Arch-based
-sudo pacman -S python python-pip git nmap libpcap
-
-# Clone the repository
-git clone https://github.com/luna-intelligence/Luna_Tool
-
-# Navigate to the project directory
-cd Luna_Tool
-
-# Install required dependencies
-pip3 install -r requirements.txt
-
-# Run the tool
-python3 main.py
 ```
 
 ## ⚠️ Legal Disclaimer
