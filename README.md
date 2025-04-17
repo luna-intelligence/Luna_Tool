@@ -55,92 +55,94 @@ Luna OSINT provides a wide array of capabilities divided into several modules:
 - Python 3.8+
 - Required Python packages (see requirements.txt)
 - Administrative privileges for some network operations
+- Supported Operating Systems:
+  - Windows 10/11
+  - Linux (Debian, Kali, Fedora, CentOS)
+  - Ubuntu (18.04+)
 
 ## 💻 Installation
 
-1. Clone the repository:
+### Windows
+
 ```bash
+# Clone the repository
 git clone https://github.com/yourusername/luna-osint-tool.git
+
+# Navigate to the project directory
 cd luna-osint-tool
-```
 
-2. Install the required dependencies:
-```bash
+# Install required dependencies
 pip install -r requirements.txt
-```
 
-3. Run the tool:
-```bash
+# Run the tool
 python main.py
 ```
 
-### Windows-Specific Requirements
-For certain functionality on Windows, you may need to install npcap:
-- Download from [npcap.org](https://npcap.org/#download)
-- Install with WinPcap compatibility mode
+### Ubuntu/Debian
 
-## 🛠️ Usage
-
-Luna OSINT Tool provides an intuitive menu-driven interface:
-
-1. Launch the application:
 ```bash
-python main.py
+# Install Python if not already installed
+sudo apt-get update
+sudo apt-get install python3 python3-pip git -y
+
+# Clone the repository
+git clone https://github.com/yourusername/luna-osint-tool.git
+
+# Navigate to the project directory
+cd luna-osint-tool
+
+# Install required dependencies
+pip3 install -r requirements.txt
+
+# Install additional system dependencies
+sudo apt-get install nmap libpcap-dev -y
+
+# Run the tool
+python3 main.py
 ```
 
-2. Navigate through the menu by selecting the desired option.
-3. Follow the on-screen prompts to access various features.
+### Other Linux Distributions
 
-### Example: Domain Reconnaissance
-```
-[1] OSINT Search
-  > Select Domain Information
-  > Enter domain: example.com
-```
-
-### Example: Custom HTTP Request
-```
-[5] Custom HTTP Requests
-  > Select Request Builder
-  > Enter URL, headers, and custom parameters
-```
-
-## 🤝 Pro Tips
-
-- Save scan results to files for easier analysis
-- Use proxy capabilities when performing sensitive searches
-- Combine multiple modules for comprehensive intelligence gathering
-- Use the custom request builder for tailored reconnaissance
-- Metadata extraction can reveal hidden information in files
-
-## 🔒 Legal Disclaimer
-
-This tool is provided for educational and legitimate security research purposes only. Users are responsible for complying with applicable laws and should only use this tool on systems they own or have explicit permission to test. The developers assume no liability for misuse or damage caused by this tool.
-
-## 🔄 Updates
-
-This tool is actively maintained. Check for updates regularly using:
 ```bash
-git pull
+# For Fedora/RHEL/CentOS
+sudo dnf install python3 python3-pip git nmap libpcap-devel -y
+# OR for Arch-based
+sudo pacman -S python python-pip git nmap libpcap
+
+# Clone the repository
+git clone https://github.com/yourusername/luna-osint-tool.git
+
+# Navigate to the project directory
+cd luna-osint-tool
+
+# Install required dependencies
+pip3 install -r requirements.txt
+
+# Run the tool
+python3 main.py
 ```
 
-## 🐛 Troubleshooting
+## ⚠️ Legal Disclaimer
 
-### Common Issues:
-- **Network module errors**: Ensure you have administrator privileges
-- **Python module not found**: Verify all dependencies are installed from requirements.txt
-- **Permission denied**: Run with elevated privileges for certain network operations
-- **Connection errors**: Check your network connectivity and firewall settings
+Luna OSINT is designed for legitimate security research, penetration testing with proper authorization, and educational purposes only. The developers assume no liability and are not responsible for any misuse or damage caused by this program. Users are responsible for ensuring compliance with local, state, and federal laws while using this tool.
+
+## 🛠️ Troubleshooting
+
+- **Permission Issues**: Ensure you're running with administrative privileges for network operations
+- **Dependencies Errors**: Verify that all requirements are installed with `pip install -r requirements.txt`
+- **Connection Timeouts**: Check your network settings and firewall configurations
+- **Rate Limiting**: Some modules implement delays to prevent API rate limiting
 
 ## 📞 Contact & Support
 
-For bug reports, feature requests, or other inquiries:
-- Telegram: https://t.me/luna_intelligence
+- Telegram : [Luna Intelligence](https://t.me/luna_intelligence)
 
-## 🌟 Acknowledgements
+## 🙏 Acknowledgements
 
-Special thanks to the open-source community and the developers of the libraries this tool depends on.
+- Thanks to all contributors and the open-source community
+- Special thanks to the developers of the libraries used in this project
+- Inspired by various OSINT frameworks and security tools
 
-## 📜 License
+## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+Luna OSINT is released under the MIT License. See the LICENSE file for details.
