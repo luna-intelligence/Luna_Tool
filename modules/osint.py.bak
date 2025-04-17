@@ -1,0 +1,626 @@
+import os
+import time
+import requests
+import socket
+import whois
+import re
+import json
+import dns.resolver
+from datetime import datetime
+from bs4 import BeautifulSoup
+from urllib.parse import urlparse
+
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def osint_menu():
+    while True:
+        clear_screen()
+        print("\n  === OSINT OPERATIONS ===")
+        print("  [1] Domain Information Gathering")
+        print("  [2] Email Verification")
+        print("  [3] Phone Number Lookup")
+        print("  [4] Username Search")
+        print("  [5] IP Geolocation")
+        print("  [0] Back to Main Menu")
+
+        choice = input("\n  Select an option: ")
+
+        if choice == "1":
+            domain_info()
+        elif choice == "2":
+            email_verification()
+        elif choice == "3":
+            phone_lookup()
+        elif choice == "4":
+            username_search()
+        elif choice == "5":
+            ip_geolocation()
+        elif choice == "0":
+            return
+        else:
+            print("  Invalid option. Please try again...")
+            time.sleep(1)
+
+def domain_info():
+    clear_screen()
+    print("\n  === DOMAIN INFORMATION GATHERING ===")
+    domain = input("  Enter domain name (e.g. example.com): ")
+    
+    if not domain:
+        print("  Invalid domain. Returning to menu...")
+        time.sleep(2)
+        return
+        
+    print(f"\n  Gathering information for: {domain}")
+    print("  " + "="*50)
+    
+    try:
+        try:
+            ip = socket.gethostbyname(domain)
+            print(f"  IP Address: {ip}")
+        except socket.gaierror:
+            print("  Could not resolve domain to IP address")
+
+        try:
+            w = whois.whois(domain)
+            print(f"  Registrar: {w.registrar}")
+            print(f"  Creation Date: {w.creation_date}")
+            print(f"  Expiration Date: {w.expiration_date}")
+            print(f"  Name Servers: {w.name_servers}")
+        except Exception as e:
+            print(f"  WHOIS information unavailable: {e}")
+        
+        print("\n  DNS Records:")
+        record_types = ["A", "AAAA", "MX", "NS", "TXT", "CNAME"]
+        
+        for record_type in record_types:
+            try:
+                answers = dns.resolver.resolve(domain, record_type)
+                print(f"  {record_type} Records:")
+                for rdata in answers:
+                    print(f"    {rdata}")
+            except Exception:
+                pass
+
+        try:
+            r = requests.get(f"https://{domain}", timeout=5)
+            print("\n  HTTP Headers:")
+            for key, value in r.headers.items():
+                print(f"  {key}: {value}")
+                
+            soup = BeautifulSoup(r.text, 'html.parser')
+            title = soup.title.string if soup.title else "No title found"
+            print(f"\n  Website Title: {title}")
+            
+            try:
+                robots = requests.get(f"https://{domain}/robots.txt", timeout=3)
+                if robots.status_code == 200:
+                    print("\n  robots.txt found:")
+                    lines = robots.text.split('\n')
+                    for line in lines[:10]: 
+                        if line.strip():
+                            print(f"    {line}")
+                    if len(lines) > 10:
+                        print("    [...]")
+            except:
+                pass
+            
+        except Exception as e:
+            try:
+                r = requests.get(f"http://{domain}", timeout=5)
+                print("\n  HTTP Headers:")
+                for key, value in r.headers.items():
+                    print(f"  {key}: {value}")
+                
+                soup = BeautifulSoup(r.text, 'html.parser')
+                title = soup.title.string if soup.title else "No title found"
+                print(f"\n  Website Title: {title}")
+            except:
+                print("  Could not retrieve HTTP headers")
+        
+        try:
+            import ssl
+            import socket
+            context = ssl.create_default_context()
+            with socket.create_connection((domain, 443)) as sock:
+                with context.wrap_socket(sock, server_hostname=domain) as ssock:
+                    cert = ssock.getpeercert()
+                    print("\n  SSL Certificate Information:")
+                    print(f"  Issued to: {cert['subject'][0][0][1]}")
+                    print(f"  Issued by: {cert['issuer'][0][0][1]}")
+                    from datetime import datetime
+                    not_before = datetime.strptime(cert['notBefore'], '%b %d %H:%M:%S %Y %Z')
+                    not_after = datetime.strptime(cert['notAfter'], '%b %d %H:%M:%S %Y %Z')
+                    print(f"  Valid from: {not_before.strftime('%Y-%m-%d')}")
+                    print(f"  Valid until: {not_after.strftime('%Y-%m-%d')}")
+        except Exception as e:
+            print("  SSL Certificate: Not available")
+            
+    except Exception as e:
+        print(f"  Error during information gathering: {e}")
+    
+    input("\n  Press Enter to continue...")
+
+def email_verification():
+    clear_screen()
+    print("\n  === EMAIL VERIFICATION ===")
+    email = input("  Enter email address: ")
+    
+    if not email or '@' not in email:
+        print("  Invalid email format. Returning to menu...")
+        time.sleep(2)
+        return
+        
+    print(f"\n  Verifying email: {email}")
+    print("  " + "="*50)
+    
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_regex, email):
+        print("  Basic validation: Invalid format")
+        input("\n  Press Enter to continue...")
+        return
+    
+    print("  Basic validation: Valid format")
+    
+    domain = email.split('@')[1]
+    try:
+        socket.gethostbyname(domain)
+        print(f"  Domain check: Domain {domain} exists")
+        
+        try:
+            mx_records = dns.resolver.resolve(domain, 'MX')
+            if mx_records:
+                print("  MX Records: Valid (Email server exists)")
+                for mx in mx_records:
+                    print(f"    {mx.exchange}")
+            else:
+                print("  MX Records: Not found (Email server might not exist)")
+        except:
+            print("  MX Records: Could not check")
+            
+    except:
+        print(f"  Domain check: Domain {domain} does not exist")
+        
+    disposable_domains = ["mailinator.com", "guerrillamail.com", "10minutemail.com", 
+                         "tempmail.com", "throwawaymail.com", "yopmail.com"]
+    if domain.lower() in disposable_domains:
+        print("  Provider Type: Disposable email provider (temporary)")
+    else:
+        print(f"  Provider: {domain}")
+    
+    input("\n  Press Enter to continue...")
+
+def phone_lookup():
+    clear_screen()
+    print("\n  === PHONE NUMBER LOOKUP ===")
+    phone = input("  Enter phone number (with country code, e.g. +1234567890): ")
+    
+    if not phone:
+        print("  Invalid phone number. Returning to menu...")
+        time.sleep(2)
+        return
+        
+    print(f"\n  Looking up phone number: {phone}")
+    print("  " + "="*50)
+    
+    phone = phone.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+    
+    if not (phone.startswith('+') and len(phone) > 8 and len(phone) < 16 and phone[1:].isdigit()):
+        print("  Invalid phone number format")
+        input("\n  Press Enter to continue...")
+        return
+    
+    country_codes = {
+        '+1': 'United States/Canada',
+        '+7': 'Russia/Kazakhstan',
+        '+20': 'Egypt',
+        '+27': 'South Africa',
+        '+30': 'Greece',
+        '+31': 'Netherlands',
+        '+32': 'Belgium',
+        '+33': 'France',
+        '+34': 'Spain',
+        '+36': 'Hungary',
+        '+39': 'Italy',
+        '+40': 'Romania',
+        '+41': 'Switzerland',
+        '+43': 'Austria',
+        '+44': 'United Kingdom',
+        '+45': 'Denmark',
+        '+46': 'Sweden',
+        '+47': 'Norway',
+        '+48': 'Poland',
+        '+49': 'Germany',
+        '+51': 'Peru',
+        '+52': 'Mexico',
+        '+54': 'Argentina',
+        '+55': 'Brazil',
+        '+56': 'Chile',
+        '+57': 'Colombia',
+        '+58': 'Venezuela',
+        '+60': 'Malaysia',
+        '+61': 'Australia',
+        '+62': 'Indonesia',
+        '+63': 'Philippines',
+        '+64': 'New Zealand',
+        '+65': 'Singapore',
+        '+66': 'Thailand',
+        '+81': 'Japan',
+        '+82': 'South Korea',
+        '+84': 'Vietnam',
+        '+86': 'China',
+        '+90': 'Turkey',
+        '+91': 'India',
+        '+92': 'Pakistan',
+        '+93': 'Afghanistan',
+        '+94': 'Sri Lanka',
+        '+95': 'Myanmar',
+        '+98': 'Iran',
+        '+212': 'Morocco',
+        '+213': 'Algeria',
+        '+216': 'Tunisia',
+        '+218': 'Libya',
+        '+220': 'Gambia',
+        '+221': 'Senegal',
+        '+222': 'Mauritania',
+        '+223': 'Mali',
+        '+224': 'Guinea',
+        '+225': 'Ivory Coast',
+        '+226': 'Burkina Faso',
+        '+227': 'Niger',
+        '+228': 'Togo',
+        '+229': 'Benin',
+        '+230': 'Mauritius',
+        '+231': 'Liberia',
+        '+232': 'Sierra Leone',
+        '+233': 'Ghana',
+        '+234': 'Nigeria',
+        '+235': 'Chad',
+        '+236': 'Central African Republic',
+        '+237': 'Cameroon',
+        '+238': 'Cape Verde',
+        '+239': 'São Tomé and Príncipe',
+        '+240': 'Equatorial Guinea',
+        '+241': 'Gabon',
+        '+242': 'Republic of the Congo',
+        '+243': 'Democratic Republic of the Congo',
+        '+244': 'Angola',
+        '+245': 'Guinea-Bissau',
+        '+246': 'British Indian Ocean Territory',
+        '+248': 'Seychelles',
+        '+249': 'Sudan',
+        '+250': 'Rwanda',
+        '+251': 'Ethiopia',
+        '+252': 'Somalia',
+        '+253': 'Djibouti',
+        '+254': 'Kenya',
+        '+255': 'Tanzania',
+        '+256': 'Uganda',
+        '+257': 'Burundi',
+        '+258': 'Mozambique',
+        '+260': 'Zambia',
+        '+261': 'Madagascar',
+        '+262': 'Réunion',
+        '+263': 'Zimbabwe',
+        '+264': 'Namibia',
+        '+265': 'Malawi',
+        '+266': 'Lesotho',
+        '+267': 'Botswana',
+        '+268': 'Eswatini',
+        '+269': 'Comoros',
+        '+290': 'Saint Helena',
+        '+291': 'Eritrea',
+        '+297': 'Aruba',
+        '+298': 'Faroe Islands',
+        '+299': 'Greenland',
+        '+350': 'Gibraltar',
+        '+351': 'Portugal',
+        '+352': 'Luxembourg',
+        '+353': 'Ireland',
+        '+354': 'Iceland',
+        '+355': 'Albania',
+        '+356': 'Malta',
+        '+357': 'Cyprus',
+        '+358': 'Finland',
+        '+359': 'Bulgaria',
+        '+370': 'Lithuania',
+        '+371': 'Latvia',
+        '+372': 'Estonia',
+        '+373': 'Moldova',
+        '+374': 'Armenia',
+        '+375': 'Belarus',
+        '+376': 'Andorra',
+        '+377': 'Monaco',
+        '+378': 'San Marino',
+        '+379': 'Vatican City',
+        '+380': 'Ukraine',
+        '+381': 'Serbia',
+        '+382': 'Montenegro',
+        '+383': 'Kosovo',
+        '+385': 'Croatia',
+        '+386': 'Slovenia',
+        '+387': 'Bosnia and Herzegovina',
+        '+389': 'North Macedonia',
+        '+420': 'Czech Republic',
+        '+421': 'Slovakia',
+        '+423': 'Liechtenstein',
+        '+500': 'Falkland Islands',
+        '+501': 'Belize',
+        '+502': 'Guatemala',
+        '+503': 'El Salvador',
+        '+504': 'Honduras',
+        '+505': 'Nicaragua',
+        '+506': 'Costa Rica',
+        '+507': 'Panama',
+        '+508': 'Saint Pierre and Miquelon',
+        '+509': 'Haiti',
+        '+590': 'Guadeloupe',
+        '+591': 'Bolivia',
+        '+592': 'Guyana',
+        '+593': 'Ecuador',
+        '+594': 'French Guiana',
+        '+595': 'Paraguay',
+        '+596': 'Martinique',
+        '+597': 'Suriname',
+        '+598': 'Uruguay',
+        '+599': 'Curaçao',
+        '+670': 'East Timor',
+        '+672': 'Norfolk Island',
+        '+673': 'Brunei',
+        '+674': 'Nauru',
+        '+675': 'Papua New Guinea',
+        '+676': 'Tonga',
+        '+677': 'Solomon Islands',
+        '+678': 'Vanuatu',
+        '+679': 'Fiji',
+        '+680': 'Palau',
+        '+681': 'Wallis and Futuna',
+        '+682': 'Cook Islands',
+        '+683': 'Niue',
+        '+685': 'Samoa',
+        '+686': 'Kiribati',
+        '+687': 'New Caledonia',
+        '+688': 'Tuvalu',
+        '+689': 'French Polynesia',
+        '+690': 'Tokelau',
+        '+691': 'Micronesia',
+        '+692': 'Marshall Islands',
+        '+850': 'North Korea',
+        '+852': 'Hong Kong',
+        '+853': 'Macau',
+        '+855': 'Cambodia',
+        '+856': 'Laos',
+        '+880': 'Bangladesh',
+        '+886': 'Taiwan',
+        '+960': 'Maldives',
+        '+961': 'Lebanon',
+        '+962': 'Jordan',
+        '+963': 'Syria',
+        '+964': 'Iraq',
+        '+965': 'Kuwait',
+        '+966': 'Saudi Arabia',
+        '+967': 'Yemen',
+        '+968': 'Oman',
+        '+970': 'Palestine',
+        '+971': 'United Arab Emirates',
+        '+972': 'Israel',
+        '+973': 'Bahrain',
+        '+974': 'Qatar',
+        '+975': 'Bhutan',
+        '+976': 'Mongolia',
+        '+977': 'Nepal',
+        '+992': 'Tajikistan',
+        '+993': 'Turkmenistan',
+        '+994': 'Azerbaijan',
+        '+995': 'Georgia',
+        '+996': 'Kyrgyzstan',
+        '+998': 'Uzbekistan'
+    }
+
+    country = "Unknown"
+    for code, country_name in country_codes.items():
+        if phone.startswith(code):
+            country = country_name
+            break
+    
+    print(f"  Country: {country}")
+    print(f"  Number format validation: Valid")
+    print(f"  Number Type: International")
+
+    if country == "United States/Canada" and len(phone) == 12: 
+        print(f"  Format: North American Numbering Plan")
+        area_code = phone[2:5]
+        prefix = phone[5:8]
+        line_number = phone[8:12]
+        print(f"  Area Code: {area_code}")
+        print(f"  Prefix: {prefix}")
+        print(f"  Line Number: {line_number}")
+    
+    input("\n  Press Enter to continue...")
+
+def username_search():
+    clear_screen()
+    print("\n  === USERNAME SEARCH ===")
+    username = input("  Enter username to search: ")
+    
+    if not username:
+        print("  Invalid username. Returning to menu...")
+        time.sleep(2)
+        return
+        
+    print(f"\n  Searching for username: {username}")
+    print("  " + "="*50)
+    print("  Checking popular platforms...")
+    
+    platforms = {
+        "Twitter/X": f"https://twitter.com/{username}",
+        "Instagram": f"https://www.instagram.com/{username}/",
+        "Facebook": f"https://www.facebook.com/{username}",
+        "LinkedIn": f"https://www.linkedin.com/in/{username}/",
+        "GitHub": f"https://github.com/{username}",
+        "Reddit": f"https://www.reddit.com/user/{username}",
+        "YouTube": f"https://www.youtube.com/@{username}",
+        "TikTok": f"https://www.tiktok.com/@{username}",
+        "Pinterest": f"https://www.pinterest.com/{username}/",
+        "Twitch": f"https://www.twitch.tv/{username}",
+        "Medium": f"https://medium.com/@{username}",
+        "Vimeo": f"https://vimeo.com/{username}",
+        "Flickr": f"https://www.flickr.com/people/{username}/",
+        "Behance": f"https://www.behance.net/{username}",
+        "Dribbble": f"https://dribbble.com/{username}",
+        "Patreon": f"https://www.patreon.com/{username}",
+        "DeviantArt": f"https://{username}.deviantart.com/",
+        "Quora": f"https://www.quora.com/profile/{username}",
+        "Steam": f"https://steamcommunity.com/id/{username}",
+        "Soundcloud": f"https://soundcloud.com/{username}"
+    }
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+    }
+    
+    results = []
+    
+    for platform, url in platforms.items():
+        try:
+            response = requests.get(url, headers=headers, timeout=5, allow_redirects=True)
+            
+            if platform == "Twitter/X":
+                if response.status_code == 200 and f"@{username}" in response.text:
+                    results.append((platform, url, True))
+                else:
+                    results.append((platform, url, False))
+            
+            elif platform == "Instagram":
+                if response.status_code == 200 and not "Page Not Found" in response.text:
+                    results.append((platform, url, True))
+                else:
+                    results.append((platform, url, False))
+            
+            elif platform == "GitHub":
+                if response.status_code == 200 and not "Not Found" in response.text:
+                    results.append((platform, url, True))
+                else:
+                    results.append((platform, url, False))
+                    
+            elif platform == "Reddit":
+                if response.status_code == 200 and "u/" + username in response.text:
+                    results.append((platform, url, True))
+                else:
+                    results.append((platform, url, False))
+                    
+            else:
+                if response.status_code == 200:
+                    results.append((platform, url, True))
+                else:
+                    results.append((platform, url, False))
+            
+            print(f"  Checking {platform}...", end="\r")
+            
+        except Exception as e:
+            results.append((platform, url, None))  
+    
+    print(" " * 40, end="\r")  
+    
+    print("\n  Results:")
+    print("  " + "-"*50)
+    
+    found_count = 0
+    for platform, url, found in results:
+        if found is True:
+            status = "FOUND"
+            found_count += 1
+        elif found is False:
+            status = "NOT FOUND"
+        else:
+            status = "ERROR CHECKING"
+        
+        print(f"  {platform}: {status}")
+        if found:
+            print(f"    URL: {url}")
+    
+    print("  " + "-"*50)
+    print(f"  Total platforms where username was found: {found_count}")
+    
+    input("\n  Press Enter to continue...")
+
+def ip_geolocation():
+    clear_screen()
+    print("\n  === IP GEOLOCATION ===")
+    ip = input("  Enter IP address: ")
+    
+    if not ip:
+        print("  Invalid IP address. Returning to menu...")
+        time.sleep(2)
+        return
+        
+    print(f"\n  Geolocating IP: {ip}")
+    print("  " + "="*50)
+    
+    ip_pattern = r'^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$'
+    match = re.match(ip_pattern, ip)
+    
+    if not match:
+        print("  Invalid IP address format")
+        input("\n  Press Enter to continue...")
+        return
+    
+    for octet in match.groups():
+        if int(octet) > 255:
+            print("  Invalid IP address (octet > 255)")
+            input("\n  Press Enter to continue...")
+            return
+    
+    private_ranges = [
+        (re.compile(r'^10\.'), "Private IP (Class A)"),
+        (re.compile(r'^172\.(1[6-9]|2[0-9]|3[0-1])\.'), "Private IP (Class B)"),
+        (re.compile(r'^192\.168\.'), "Private IP (Class C)"),
+        (re.compile(r'^127\.'), "Localhost"),
+        (re.compile(r'^169\.254\.'), "Link-local address")
+    ]
+    
+    for pattern, label in private_ranges:
+        if pattern.match(ip):
+            print(f"  {label}")
+            print("  Cannot geolocate private IP addresses")
+            input("\n  Press Enter to continue...")
+            return
+    
+    try:
+        response = requests.get(f"https://ipinfo.io/{ip}/json")
+        data = response.json()
+        
+        if "bogon" in data and data["bogon"]:
+            print("  This is a bogon (reserved/private) IP address")
+            input("\n  Press Enter to continue...")
+            return
+        
+        print("  Location Information:")
+        if "city" in data and "region" in data and "country" in data:
+            print(f"  City: {data.get('city', 'Unknown')}")
+            print(f"  Region: {data.get('region', 'Unknown')}")
+            print(f"  Country: {data.get('country', 'Unknown')}")
+        
+        if "loc" in data:
+            print(f"  Coordinates: {data.get('loc', 'Unknown')}")
+            
+        if "org" in data:
+            print(f"  ISP/Organization: {data.get('org', 'Unknown')}")
+            
+        if "timezone" in data:
+            print(f"  Timezone: {data.get('timezone', 'Unknown')}")
+            
+        if "postal" in data:
+            print(f"  Postal Code: {data.get('postal', 'Unknown')}")
+            
+        try:
+            hostname = socket.gethostbyaddr(ip)[0]
+            print(f"  Hostname: {hostname}")
+        except:
+            print("  Hostname: Not available")
+        
+    except Exception as e:
+        print(f"  Error retrieving geolocation data: {e}")
+    
+    input("\n  Press Enter to continue...") 
